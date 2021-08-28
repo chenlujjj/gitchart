@@ -17,6 +17,9 @@ const cellWidth = 3        // 每个格子的宽度
 
 func main() {
 	months := flag.Int("month", 6, "since how many months ago")
+	username := flag.String("username", "", "check commits by the author. If not set, would check all authors' commits")
+	self := flag.Bool("self", false, "only check commits by myself. This flag would override `username` flag")
+
 	flag.Parse()
 	repo, err := os.Getwd()
 	if err != nil {
@@ -31,7 +34,7 @@ func main() {
 	gap := time.Sunday - ago.Local().Weekday()
 	startDay := ago.AddDate(0, 0, int(gap))
 
-	dayCommits, err := getDayCommits(repo, *months)
+	dayCommits, err := getDayCommits(repo, *months, *username, *self)
 	if err != nil {
 		fmt.Printf("ERROR: get commits of repository %s: %v", repo, err)
 		os.Exit(1)
@@ -100,10 +103,17 @@ var shortMonthNames = []string{
 	"Dec",
 }
 
-func getDayCommits(path string, lastMonths int) (map[time.Time]int, error) {
+func getDayCommits(path string, lastMonths int, username string, self bool) (map[time.Time]int, error) {
 	r, err := git.PlainOpenWithOptions(path, &git.PlainOpenOptions{DetectDotGit: true})
 	if err != nil {
 		return nil, err
+	}
+	if self {
+		conf, err := r.Config()
+		if err != nil {
+			return nil, err
+		}
+		username = conf.User.Name
 	}
 
 	// ... retrieves the commit history
@@ -114,14 +124,13 @@ func getDayCommits(path string, lastMonths int) (map[time.Time]int, error) {
 	}
 
 	// ... just iterates over the commits
-	var cCount int
-	// 每天交了多少个commit
+	// 统计每天交了多少个commit
 	dayCommits := make(map[time.Time]int)
 	err = cIter.ForEach(func(c *object.Commit) error {
-		cCount++
-
-		when := c.Committer.When
-		// 转换为当天
+		if username != "" && c.Author.Name != username {
+			return nil
+		}
+		when := c.Author.When
 		day := time.Date(when.Year(), when.Month(), when.Day(), 0, 0, 0, 0, time.Local)
 		if _, ok := dayCommits[day]; !ok {
 			dayCommits[day] = 1
