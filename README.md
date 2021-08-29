@@ -1,4 +1,4 @@
-# git-chart
+# gitchart
 
 `gitchart` is a command line tool to show git commits distribution in the last several months.
 
