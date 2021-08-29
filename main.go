@@ -17,8 +17,8 @@ const cellWidth = 3        // 每个格子的宽度
 
 func main() {
 	months := flag.Int("month", 6, "since how many months ago")
-	username := flag.String("username", "", "check commits by the author. If not set, would check all authors' commits")
-	self := flag.Bool("self", false, "only check commits by myself. This flag would override `username` flag")
+	username := flag.String("username", "", "count commits by the 'username' author. If not set, would count all authors' commits")
+	self := flag.Bool("self", false, "only count commits by myself. This flag would override 'username' flag")
 
 	flag.Parse()
 	repo, err := os.Getwd()
