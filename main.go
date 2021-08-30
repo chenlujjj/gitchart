@@ -114,6 +114,9 @@ func getDayCommits(path string, lastMonths int, username string, self bool) (map
 			return nil, err
 		}
 		username = conf.User.Name
+		if username == "" {
+			fmt.Println("WARN: cannot find 'user.name' in git config, would ignore '-self' flag")
+		}
 	}
 
 	// ... retrieves the commit history
